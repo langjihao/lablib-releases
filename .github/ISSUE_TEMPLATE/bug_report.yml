@@ -1,0 +1,39 @@
+name: 问题反馈
+description: 反馈 LabLib 使用中遇到的问题
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: "感谢提供复现信息。反馈公开可见，请勿上传数据库、Vault、配置、API Key 或完整日志；截图请先遮盖个人信息。"
+  - type: input
+    id: version
+    attributes:
+      label: LabLib 版本
+      description: 在设置 → 更新与备份中查看。
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 操作系统与处理器
+      placeholder: "例如：macOS / Apple Silicon，Windows 11 / x64"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 问题描述与复现步骤
+      placeholder: "1. 打开…\n2. 点击…\n3. 出现…"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期结果与实际结果
+    validations:
+      required: true
+  - type: textarea
+    id: additional
+    attributes:
+      label: 截图或补充信息
+      description: 可选。请先遮盖个人信息和密钥。
