@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LabLib — 本地研究库</title>
+    <meta
+      name="description"
+      content="LabLib 是装在自己电脑上的科研文献库。论文、笔记和助手的结论都可以回到原文。"
+    />
+    <meta name="theme-color" content="#e7e0d2" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560&text=LabLib&display=swap"
+    />
+    <style>
+      :root {
+        --paper: #e7e0d2;
+        --paper-deep: #ddd4c2;
+        --sheet: #fffdf8;
+        --ink: #1c1915;
+        --muted: #5e584e;
+        --rule: #243e66;
+        --mark: #efd36a;
+        --line: rgba(36, 62, 102, 0.16);
+        --shadow: 0 24px 60px rgba(48, 36, 18, 0.12);
+        --serif: "Songti SC", "STSong", "Noto Serif SC", "PMingLiU", "Times New Roman", serif;
+        --word: "Fraunces", "Songti SC", serif;
+        --sans: "Avenir Next", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        color: var(--ink);
+        background:
+          radial-gradient(1200px 500px at 10% -10%, rgba(255, 252, 245, 0.9), transparent 55%),
+          linear-gradient(180deg, #efe8da 0%, var(--paper) 28%, #e3d9c6 100%);
+        font-family: var(--serif);
+        font-size: 18px;
+        line-height: 1.7;
+      }
+      body::before {
+        content: "";
+        pointer-events: none;
+        position: fixed;
+        z-index: 0;
+        inset: 0;
+        opacity: 0.18;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.55'/></svg>");
+      }
+      a { color: var(--rule); }
+      a:hover { color: var(--ink); }
+      :focus-visible {
+        outline: 2px solid var(--rule);
+        outline-offset: 3px;
+      }
+
+      .wrap {
+        position: relative;
+        z-index: 1;
+        width: min(1120px, calc(100% - 40px));
+        margin: 0 auto;
+      }
+      .mast {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 28px 0 18px;
+        border-bottom: 1px solid var(--ink);
+        box-shadow: 0 1px 0 rgba(255, 252, 245, 0.7);
+      }
+      .mast::after {
+        content: "";
+        display: none;
+      }
+      .brand {
+        font-family: var(--word);
+        font-weight: 560;
+        font-size: 28px;
+        letter-spacing: -0.03em;
+        text-decoration: none;
+        color: var(--ink);
+      }
+      .brand small {
+        display: block;
+        margin-top: 2px;
+        font-family: var(--sans);
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.18em;
+        color: var(--muted);
+      }
+      nav {
+        display: flex;
+        gap: 22px;
+        font-family: var(--sans);
+        font-size: 14px;
+      }
+      nav a { text-decoration: none; }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 48px;
+        align-items: end;
+        padding: 72px 0 36px;
+      }
+      .kicker {
+        margin: 0 0 18px;
+        font-family: var(--sans);
+        font-size: 13px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--rule);
+      }
+      h1 {
+        margin: 0;
+        font-weight: 600;
+        font-size: clamp(46px, 6vw, 78px);
+        line-height: 1.08;
+        letter-spacing: -0.03em;
+      }
+      h1 em {
+        font-style: italic;
+        font-weight: 500;
+      }
+      .lede {
+        max-width: 38em;
+        margin: 22px 0 0;
+        color: var(--muted);
+        font-size: 19px;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        margin-top: 28px;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        min-height: 46px;
+        padding: 0 18px;
+        border-radius: 999px;
+        text-decoration: none;
+        font-family: var(--sans);
+        font-size: 15px;
+      }
+      .btn.primary {
+        background: var(--ink);
+        color: #f7f3ea;
+      }
+      .btn.primary:hover { background: var(--rule); color: white; }
+      .btn.ghost {
+        border: 1px solid rgba(28, 25, 21, 0.28);
+        color: var(--ink);
+      }
+      .status {
+        margin: 16px 0 0;
+        font-family: var(--sans);
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .stack {
+        position: relative;
+        height: 460px;
+      }
+      .sheet {
+        position: absolute;
+        border-radius: 18px;
+      }
+      .sheet.back {
+        inset: 36px 18px 20px 54px;
+        background: #d5ccbb;
+        transform: rotate(4deg);
+      }
+      .sheet.front {
+        inset: 8px 36px 48px 8px;
+        padding: 36px 32px 28px;
+        background: var(--sheet);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+      .sheet.front::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 14px;
+        background: linear-gradient(#2d4d7a, #1d3354);
+      }
+      .bar, .mark {
+        display: block;
+        height: 10px;
+        border-radius: 999px;
+        background: #d9d3c7;
+      }
+      .bar { margin: 14px 0; }
+      .bar.title { width: 62%; height: 14px; background: #4e4942; margin-bottom: 22px; }
+      .bar.short { width: 34%; }
+      .bar.mid { width: 78%; }
+      .row {
+        display: grid;
+        grid-template-columns: 92px 1fr;
+        gap: 10px;
+        align-items: center;
+        margin: 16px 0;
+      }
+      .mark {
+        height: 22px;
+        background: var(--mark);
+        transform-origin: left center;
+        animation: draw 900ms ease both;
+      }
+      .mark.late { animation-delay: 240ms; }
+      .sidenote {
+        position: absolute;
+        right: 0;
+        bottom: 8px;
+        width: 150px;
+        margin: 0;
+        color: var(--rule);
+        font-family: var(--sans);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .rule {
+        border: 0;
+        border-top: 1px solid var(--ink);
+        margin: 10px 0 0;
+      }
+      .points {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 28px;
+        padding: 34px 0 10px;
+      }
+      .points article {
+        padding-top: 8px;
+        border-top: 1px solid var(--line);
+      }
+      .num {
+        font-family: var(--sans);
+        font-size: 12px;
+        letter-spacing: 0.16em;
+        color: var(--rule);
+      }
+      h2 {
+        margin: 8px 0 8px;
+        font-size: 28px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+      .points p, .notice p { margin: 0; color: var(--muted); font-size: 16px; }
+
+      .notice {
+        display: grid;
+        grid-template-columns: 180px 1fr;
+        gap: 28px;
+        margin: 54px 0 28px;
+        padding: 28px;
+        background: rgba(255, 253, 248, 0.62);
+        border: 1px solid rgba(28, 25, 21, 0.08);
+        border-radius: 18px;
+      }
+      .notice h2 { margin-top: 0; font-size: 24px; }
+      .notice ul {
+        margin: 0;
+        padding-left: 1.1em;
+        color: var(--muted);
+      }
+      .notice li + li { margin-top: 8px; }
+
+      footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 0 36px;
+        border-top: 1px solid var(--ink);
+        font-family: var(--sans);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+      }
+      footer a { color: inherit; }
+
+      .rise {
+        animation: rise 700ms ease both;
+      }
+      .rise.d2 { animation-delay: 90ms; }
+      .rise.d3 { animation-delay: 160ms; }
+
+      @keyframes rise {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: none; }
+      }
+      @keyframes draw {
+        from { transform: scaleX(0); }
+        to { transform: none; }
+      }
+
+      @media (max-width: 860px) {
+        .hero, .points, .notice, footer { grid-template-columns: 1fr; display: grid; }
+        .hero { padding-top: 42px; gap: 12px; }
+        .stack { height: 390px; margin-top: 12px; }
+        .mast { align-items: flex-start; flex-direction: column; }
+        footer { display: flex; flex-direction: column; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation: none !important;
+          scroll-behavior: auto !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="mast">
+        <a class="brand" href="./">LabLib<small>本地研究库</small></a>
+        <nav>
+          <a href="https://github.com/langjihao/lablib-releases/releases">安装包</a>
+          <a href="https://github.com/langjihao/lablib-releases/issues/new/choose">反馈</a>
+          <a href="#care">使用注意</a>
+        </nav>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div class="rise">
+            <p class="kicker">装在自己的电脑上</p>
+            <h1>把一叠论文，<br />收成<em>自己的库</em>。</h1>
+            <p class="lede">
+              LabLib 把 PDF、网页、笔记和标注放在一起。助手可以提取、整理和对比，写出的句子应能跳回原文；写进库里之前，先给你看过。
+            </p>
+            <div class="actions">
+              <a class="btn primary" href="https://github.com/langjihao/lablib-releases/releases">查看发布页</a>
+              <a class="btn ghost" href="https://github.com/langjihao/lablib-releases/issues/new/choose">反馈问题</a>
+            </div>
+            <p class="status">公开安装包还没有发布。发出版本后，发布页和应用里的「设置 → 更新与备份」都会出现。</p>
+          </div>
+          <div class="stack rise d2" aria-hidden="true">
+            <div class="sheet back"></div>
+            <div class="sheet front">
+              <span class="bar title"></span>
+              <span class="bar mid"></span>
+              <span class="bar short"></span>
+              <span class="bar"></span>
+              <span class="row"><span class="mark"></span><span class="bar"></span></span>
+              <span class="bar mid"></span>
+              <span class="row"><span class="mark late"></span><span class="bar short"></span></span>
+              <span class="bar"></span>
+              <span class="bar short"></span>
+            </div>
+            <p class="sidenote">黄条是被标出的那一句，可以回到这一页。</p>
+          </div>
+        </section>
+
+        <hr class="rule" />
+
+        <section class="points rise d3">
+          <article>
+            <div class="num">01</div>
+            <h2>库在本地</h2>
+            <p>文献和笔记留在这台电脑上。更新前应用会先做备份，安装包由你自己打开。</p>
+          </article>
+          <article>
+            <div class="num">02</div>
+            <h2>句子对得上</h2>
+            <p>划词、笔记和助手引用尽量落在原文的位置，而不是只留下一段找不到出处的转述。</p>
+          </article>
+          <article>
+            <div class="num">03</div>
+            <h2>改动看得到</h2>
+            <p>助手写入库之前要经过确认。可以撤销的修改留有退路，不把对论文的整理做成一次无法核对的对话。</p>
+          </article>
+        </section>
+
+        <section class="notice" id="care">
+          <h2>反馈时请留心</h2>
+          <div>
+            <ul>
+              <li>问题是公开的。请写上应用版本、操作系统，以及怎么复现。</li>
+              <li>不要附上数据库、Vault、配置文件、API Key 或完整日志。</li>
+              <li>截图请遮住姓名、路径和其他个人信息。</li>
+            </ul>
+            <p style="margin-top: 14px">
+              <a href="https://github.com/langjihao/lablib-releases/issues">查看已经反馈的问题</a>
+            </p>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <span>LabLib · 安装包与问题反馈</span>
+        <span>源码不在这个仓库</span>
+      </footer>
+    </div>
+  </body>
+</html>
